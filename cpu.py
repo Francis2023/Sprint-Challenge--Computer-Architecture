@@ -137,12 +137,21 @@ class CPU:
             self.ram_write(1, self.reg[SP])
             pc = regToReturnTo
         elif instruction == CMP:
-
+            if self.reg[operand_a] == self.reg[operand_b]:
+                E = 1
+            elif self.reg[operand_a] < self.reg[operand_b]:
+                L = 1
+            else:
+                G = 1
         elif instruction == JMP:
-
+            jumpTo = self.reg[SP]
+            PC = jumpTo
         elif instruction == JEQ:
-
+            if E:
+                PC = self.reg[operand_a]
         elif instruction == JNE:
+            if not E:
+                PC = self.reg[operand_a]
 
         else:
             print("Idk this instruction. Exiting")
