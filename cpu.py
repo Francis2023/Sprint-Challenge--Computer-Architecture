@@ -27,6 +27,7 @@ class CPU:
         self.reg[7] = 0xF4
         self.pc = 0
         self.halted = False
+        self.flag = {"L":0,"G":0,"E":0}
 
     def ram_read(self, address):
         return self.ram[address]
@@ -60,9 +61,9 @@ class CPU:
         #     0b00000001, # HLT
         # ]
 
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+        # for instruction in program:
+        #     self.ram[address] = instruction
+        #     address += 1
 
 
     def alu(self, op, reg_a, reg_b):
@@ -103,55 +104,59 @@ class CPU:
             self.execute_instruction(instruction_to_execute, operand_a,operand_b)
     
     def execute_instruction(self, instruction_to_execute, operand_a, operand_b):
-        if instruction == HLT:
+        print(instruction_to_execute)
+        if instruction_to_execute == HLT:
             self.halted = True
             self.pc += 1
-        elif instruction == PRN:
+        elif instruction_to_execute == PRN:
             print(self.reg[operand_a])
             self.pc += 2
-        elif instruction == LDI:
+        elif instruction_to_execute == LDI:
             self.reg[operand_a] = operand_b
             self.pc += 3
-        elif instruction == MULT:
+        elif instruction_to_execute == MULT:
             self.reg[operand_a] += self.reg[operand_b]
             self.pc += 3
-        elif instruction == PUSH:
+        elif instruction_to_execute == PUSH:
             self.reg[SP] -= 1 # decrement the stack pointer
             valueFromRegister = self.reg[operand_a] # write the value stored in register onto the stack
             self.ram_write(valueFromRegister, self.reg[SP])
             self.pc += 2
-        elif instruction == POP:
+        elif instruction_to_execute == POP:
             topmostValue = self.ram_read(self.reg[SP]) # Save the value on top the stack onto the register given
             self.reg[operand_a] = topmostValue
             self.reg[SP] += 1 # increment the stack pointer
             self.pc += 2
-        elif instruction == CALL:
+        elif instruction_to_execute == CALL:
             self.reg[SP] -= 1
             address = self.pc + 2
             self.ram_write(address ,self.reg[SP])
             regToGetAddressFrom = self.ram_read(self.reg[SP])
             regToJumpTo = self.reg[operand_a]
-            pc = regToJumpTo
-        elif instruction == RET:
+            self.pc = regToJumpTo
+        elif instruction_to_execute == RET:
             regToReturnTo = self.ram_read(self.reg[SP])
             self.ram_write(1, self.reg[SP])
-            pc = regToReturnTo
-        elif instruction == CMP:
+            self.pc = regToReturnTo
+        elif instruction_to_execute == CMP:
             if self.reg[operand_a] == self.reg[operand_b]:
-                E = 1
+                self.flag["E"] = 1
             elif self.reg[operand_a] < self.reg[operand_b]:
-                L = 1
+                self.flag["L"] = 1
             else:
-                G = 1
-        elif instruction == JMP:
+                self.flag["G"] = 1
+        elif instruction_to_execute == JMP:
             jumpTo = self.reg[SP]
-            PC = jumpTo
-        elif instruction == JEQ:
-            if E:
-                PC = self.reg[operand_a]
-        elif instruction == JNE:
-            if not E:
-                PC = self.reg[operand_a]
+            self.pc = jumpTo
+        elif instruction_to_execute == JEQ:
+            if self.flag["E"] == 1:
+                self.pc = self.reg[operand_a]
+            else:
+                self.pc += 2
+        elif instruction_to_execute == JNE:
+            if self.flag["E"] == 0:
+                self.pc = self.reg[operand_a]
+                self.pc += 2
 
         else:
             print("Idk this instruction. Exiting")
